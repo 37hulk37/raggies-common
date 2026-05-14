@@ -1,0 +1,4 @@
+import org.springframework.boot.autoconfigure.AutoConfiguration
+
+@AutoConfiguration
+open class ModuleAutoConfiguration
