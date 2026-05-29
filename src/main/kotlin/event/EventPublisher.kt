@@ -1,14 +1,9 @@
 package event
 
-import java.io.Serializable
-import java.util.concurrent.CompletableFuture
+import org.springframework.messaging.Message
 
 interface EventPublisher {
 
-    fun <T : Serializable> publish(
-        destination: String,
-        key: String,
-        event: BaseEvent<T>,
-    ): CompletableFuture<BaseEvent<T>>
+    fun <T> publish(message: Message<T>)
 
 }

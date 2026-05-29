@@ -2,7 +2,7 @@ package event
 
 import java.io.Serializable
 
-abstract class BaseEvent<T: Serializable>(
+abstract class BaseEvent<T>(
     val source: T,
-    val operation: EventOperation
+    val operation: String
 ): Serializable

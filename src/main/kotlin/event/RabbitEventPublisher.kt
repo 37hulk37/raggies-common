@@ -2,33 +2,27 @@ package event
 
 import exception.ApplicationException
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import java.io.Serializable
-import java.util.concurrent.CompletableFuture
+import org.springframework.amqp.rabbit.core.RabbitMessagingTemplate
+import org.springframework.messaging.Message
 
 class RabbitEventPublisher(
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitMessagingTemplate
 ): EventPublisher {
 
     companion object {
         val log = LoggerFactory.getLogger(RabbitEventPublisher::class.java)!!
     }
 
-    override fun <T : Serializable> publish(
-        destination: String,
-        key: String,
-        event: BaseEvent<T>,
-    ): CompletableFuture<BaseEvent<T>>
-        = CompletableFuture.supplyAsync {
-            rabbitTemplate.convertAndSend(destination, key, event)
+    override fun <T> publish(message: Message<T>) {
+        val destination = message.headers.get("destination", String::class.java)
+        val routingKey = message.headers.get("evenType", String::class.java)
 
-            log.info("Event published: ${event::class.simpleName} to destination $destination with routing key $key")
-
-            event
+        if (destination == null || routingKey == null) {
+            throw ApplicationException("destination or routing-key not found")
         }
-        .exceptionally { t ->
-            log.error("Error while publishing $event  to $destination with $key", t)
 
-            throw ApplicationException("Error while publishing event $event", t)
-        }
+        rabbitTemplate.send(destination, routingKey, message)
+
+        log.info("Event published: ${message.payload::class.simpleName} to destination $destination with routing key $routingKey")
+    }
 }
