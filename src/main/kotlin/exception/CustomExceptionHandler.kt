@@ -1,8 +1,8 @@
 package exception
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import exception.handler.DefaultErrorHandler
-import exception.handler.ErrorHandler
+import exception.handlers.DefaultErrorHandler
+import exception.handlers.ErrorHandler
 import org.springframework.http.*
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
