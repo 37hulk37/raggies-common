@@ -1,21 +1,20 @@
 package exception
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpStatus
-import org.springframework.http.HttpStatusCode
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity
+import exception.handler.DefaultErrorHandler
+import exception.handler.ErrorHandler
+import org.springframework.http.*
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.context.request.WebRequest
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
-import java.util.StringJoiner
 
 @ControllerAdvice
 class CustomExceptionHandler(
+    private val handlers: List<ErrorHandler>,
+    private val defaultErrorHandler: DefaultErrorHandler,
     private val objectMapper: ObjectMapper
 ) : ResponseEntityExceptionHandler() {
 
@@ -29,46 +28,14 @@ class CustomExceptionHandler(
 
         logger.error("Error when doing operation", t)
 
+        val handler = getHandler(t)
         return handleExceptionInternal(
             RuntimeException(t),
-            objectMapper.writeValueAsBytes(createError(t, request)),
+            objectMapper.writeValueAsBytes(handler.handle(t, request)),
             headers,
-            getStatus(t),
+            handler.getStatus(),
             request
         )
-    }
-
-    private fun getStatus(t: Throwable): HttpStatusCode
-        = when (t) {
-            is AccessDeniedException -> HttpStatus.FORBIDDEN
-
-            else -> HttpStatus.BAD_REQUEST
-        }
-
-    private fun createError(
-        t: Throwable,
-        request: WebRequest
-    ): Error {
-        val detailsJoiner = StringJoiner(", ")
-        detailsJoiner.add(t.message)
-
-        if (t is MethodArgumentNotValidException) {
-            t.bindingResult.allErrors
-                .forEach {
-                    detailsJoiner.add(it.defaultMessage)
-                }
-
-        }
-
-        if (t is MethodArgumentNotValidException) {
-            t.bindingResult.allErrors
-                .forEach {
-                    detailsJoiner.add(it.defaultMessage)
-                }
-
-        }
-
-        return Error(detailsJoiner.toString(), request.getDescription(false))
     }
 
     override fun handleHttpMessageNotReadable(
@@ -91,4 +58,9 @@ class CustomExceptionHandler(
         HttpStatus.BAD_REQUEST,
         request
     )
+
+    private fun getHandler(t: Throwable): ErrorHandler =
+        handlers.firstOrNull { it !== defaultErrorHandler && it.supports(t) }
+            ?: defaultErrorHandler
+
 }
