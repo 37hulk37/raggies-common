@@ -12,11 +12,16 @@ val gitVersion: String = try {
     "0.0.0-dev"
 }
 
+kotlin {
+    jvmToolchain(21)
+}
+
 group = "ru.raggies"
 version = gitVersion
 
 repositories {
     mavenCentral()
+    mavenLocal()
     maven { url = uri("https://jitpack.io") }
 }
 
@@ -28,13 +33,17 @@ dependencies {
     testImplementation(kotlin("test"))
 }
 
+kotlin {
+    jvmToolchain(21)
+}
+
 publishing {
     publications {
         create<MavenPublication>("maven") {
             from(components["java"])
 
             groupId = "com.github.37hulk37"
-            artifactId = "raggies-common"
+            artifactId = "sharazan-${project.name}"
             version = gitVersion
         }
     }
