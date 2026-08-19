@@ -43,7 +43,7 @@ publishing {
             from(components["java"])
 
             groupId = "com.github.37hulk37"
-            artifactId = "sharazan-${project.name}"
+            artifactId = "common-${project.name}"
             version = gitVersion
         }
     }
