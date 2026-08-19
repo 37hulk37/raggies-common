@@ -4,11 +4,20 @@ plugins {
     `maven-publish`
 }
 
+val gitVersion: String = try {
+    providers.exec {
+        commandLine("git", "describe", "--tags", "--abbrev=0")
+    }.standardOutput.asText.get().trim()
+} catch (_: Exception) {
+    "0.0.0-dev"
+}
+
 group = "ru.raggies"
-version = "1.0-SNAPSHOT"
+version = gitVersion
 
 repositories {
     mavenCentral()
+    maven { url = uri("https://jitpack.io") }
 }
 
 dependencies {
@@ -24,10 +33,14 @@ publishing {
         create<MavenPublication>("maven") {
             from(components["java"])
 
-            groupId = "ru.raggies"
-            artifactId = "common"
-            version = "1.0-SNAPSHOT"
+            groupId = "com.github.37hulk37"
+            artifactId = "raggies-common"
+            version = gitVersion
         }
+    }
+
+    repositories {
+        mavenLocal()
     }
 }
 
